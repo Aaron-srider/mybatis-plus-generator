@@ -69,14 +69,17 @@ public class DatabaseUtilTest {
             }
 
             //System.out.println(new File(".").getAbsolutePath());
-            JavaSourceFile poSourceFile = table.generateJavaModel(JavaPackage.from("fit/wenchao/db/dao"));
-            table.generateMybatisMapper(JavaPackage.from("fit/wenchao/db/dao"),poSourceFile);
-            JavaSourceFile daoSourceFile = table.generateDao(JavaPackage.from("fit/wenchao/db/dao"));
-            table.generateDaoImpl(JavaPackage.from("fit/wenchao/db/dao"), daoSourceFile);
-
+            JavaSourceFile poSourceFile = table.generateJavaModel(JavaPackage.from("fit/wenchao/db/dao/po"));
+            JavaSourceFile mapperSourceFile = table.generateMybatisMapper(JavaPackage.from("fit/wenchao/db/dao/mapper"),
+                    poSourceFile);
+            JavaSourceFile daoSourceFile = table.generateDao(JavaPackage.from("fit/wenchao/db/dao/repo"), poSourceFile);
+            table.generateDaoImpl(JavaPackage.from("fit/wenchao/db/dao/repo/impl"),
+                    mapperSourceFile,
+                    poSourceFile,
+                    daoSourceFile);
 
             JavaSourceFile serviceSourceFile = table.generateService(JavaPackage.from("fit/wenchao/db/service"));
-            table.generateServiceImpl(JavaPackage.from("fit/wenchao/db/service/impl"),serviceSourceFile);
+            table.generateServiceImpl(JavaPackage.from("fit/wenchao/db/service/impl"), serviceSourceFile);
 
         }
     }

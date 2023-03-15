@@ -9,8 +9,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class JavaSourceFile {
+
     JavaClassName javaClassName;
+
     String srcFileName;
+
     String srcCode;
 
     String packageName;
@@ -24,15 +27,36 @@ public class JavaSourceFile {
         javaSourceFile.javaClassName = javaClassName;
         javaSourceFile.packageName = javaPackage.getDotSplitName();
         //JavaClassName javaClassName = JavaClassName.fromLowerUnderScore("user_action");
+        //@TableName("`dept`")
 
         JavaCode javaCode = JavaCode
                 .writing()
                 .packagel(javaPackage.getDotSplitName())
+
+                .importl("com.baomidou.mybatisplus.annotation.TableName")
+                .importl("com.baomidou.mybatisplus.annotation.TableId")
+                .importl("com.baomidou.mybatisplus.annotation.IdType")
+                .importl("java.io.Serializable")
                 .importl("lombok.Data")
+                .importl("lombok.AllArgsConstructor")
+                .importl("lombok.Builder")
+                .importl("lombok.Data")
+                .importl("lombok.NoArgsConstructor")
+                .importl("lombok.experimental.Accessors")
+
                 .atl("Data")
-                .publicl().classl(javaClassName.getName())
+                .atl("AllArgsConstructor")
+                .atl("NoArgsConstructor")
+                .atl("Builder")
+                .atl("Accessors(chain = true)")
+                .atl("TableName(\"`" + table.getName() + "`\")")
+                .publicl().classl(javaClassName.getName()).implementsl("Serializable")
                 .blockl(jc -> {
                     for (TableAttr tableAttr : table) {
+                        if (tableAttr.isPri()) {
+                            //@TableId(value = "id", type = IdType.AUTO)
+                            jc.atl("TableId(value=\"" + tableAttr.getName() + "\", type=IdType.AUTO)");
+                        }
                         if (tableAttr.getType().equalsIgnoreCase("varchar")) {
                             jc.write("String ");
                             //codeBuilder.append("String ");
@@ -85,7 +109,9 @@ public class JavaSourceFile {
 
         JavaClassName serviceClassName = serviceSourceFile.getJavaClassName();
 
-        JavaClassName serviceImplClassName = JavaClassName.fromLowerUnderScore(javaPackage, table.getName(), "ServiceImpl");
+        JavaClassName serviceImplClassName = JavaClassName.fromLowerUnderScore(javaPackage,
+                table.getName(),
+                "ServiceImpl");
         //poSourceFile.
         javaSourceFile.srcFileName = serviceImplClassName.toJavaSrcFileName();
         javaSourceFile.javaClassName = serviceImplClassName;
@@ -96,15 +122,15 @@ public class JavaSourceFile {
                 JavaCode.writing()
                         .packagel(javaPackage.getDotSplitName())
                         .importl(serviceClassName.getFullName())
-                        .importl("org.apache.ibatis.annotations.Mapper")
-                        .importl("com.baomidou.mybatisplus.core.mapper.BaseMapper")
-                        .atl("Mapper")
-                        .publicl().interfacel(serviceImplClassName.getName()).extendsl("BaseMapper<" + serviceClassName.getName() + ">")
+                        .importl("lombok.extern.slf4j.Slf4j")
+                        .importl("org.springframework.stereotype.Service")
+                        .atl("Service")
+                        .atl("Slf4j")
+                        .publicl().classl(serviceImplClassName.getName()).implementsl(serviceSourceFile.getJavaClassName().getName())
                         .blockl();
 
         javaSourceFile.srcCode = javaCode.toString();
         return javaSourceFile;
-        return null;
     }
 
 
@@ -112,7 +138,7 @@ public class JavaSourceFile {
         return this.javaClassName;
     }
 
-    public static JavaSourceFile ofDao(Table table, JavaPackage javaPackage) {
+    public static JavaSourceFile ofDao(Table table, JavaPackage javaPackage, JavaSourceFile poJavaSourceFile) {
         JavaSourceFile javaSourceFile = new JavaSourceFile();
         StringBuilder codeBuilder = new StringBuilder();
 
@@ -125,14 +151,16 @@ public class JavaSourceFile {
         JavaCode javaCode = JavaCode
                 .writing()
                 .packagel(javaPackage.getDotSplitName())
-                .publicl().interfacel(daoClassName.getName())
+                .importl(poJavaSourceFile.getJavaClassName().getFullName())
+                .importl("com.baomidou.mybatisplus.extension.service.IService")
+                .publicl().interfacel(daoClassName.getName()).extendsl("IService<" + poJavaSourceFile.getJavaClassName().getName() + ">")
                 .blockl();
 
         javaSourceFile.srcCode = javaCode.toString();
         return javaSourceFile;
     }
 
-    public static JavaSourceFile ofDaoImpl(Table table, JavaPackage javaPackage, JavaSourceFile daoSourceFile) {
+    public static JavaSourceFile ofDaoImpl(Table table, JavaPackage javaPackage, JavaSourceFile mapperSourceFile, JavaSourceFile poSourceFile, JavaSourceFile daoSourceFile) {
         JavaSourceFile javaSourceFile = new JavaSourceFile();
         StringBuilder codeBuilder = new StringBuilder();
 
@@ -146,9 +174,13 @@ public class JavaSourceFile {
                 JavaCode.writing()
                         .packagel(javaPackage.getDotSplitName())
                         .importl("org.springframework.stereotype.Repository")
+                        .importl("com.baomidou.mybatisplus.extension.service.impl.ServiceImpl")
+                        .importl(poSourceFile.getJavaClassName().getFullName())
+                        .importl(mapperSourceFile.getJavaClassName().getFullName())
                         .importl(daoSourceFile.getJavaClassName().getFullName())
                         .atl("Repository")
-                        .publicl().classl(daoImplClassName.getName()).implementsl(daoSourceFile.getJavaClassName().getName())
+                        .publicl().classl(daoImplClassName.getName()).extendsl("ServiceImpl<" + mapperSourceFile.getJavaClassName().getName() + "," + poSourceFile.getJavaClassName().getName() + ">").implementsl(
+                                daoSourceFile.getJavaClassName().getName())
                         .blockl();
 
         javaSourceFile.srcCode = javaCode.toString();
@@ -173,7 +205,6 @@ public class JavaSourceFile {
             throw new RuntimeException(e);
         }
     }
-
 
     public static JavaSourceFile ofService(Table table, JavaPackage javaPackage) {
         JavaSourceFile javaSourceFile = new JavaSourceFile();

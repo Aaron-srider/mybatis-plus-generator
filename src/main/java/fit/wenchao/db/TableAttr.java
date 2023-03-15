@@ -38,6 +38,7 @@ public class TableAttr {
             for (int i = 0; i < tableColumnCount; i++) {
                 String colName = rsmd.getColumnName(i + 1);
                 String colType = rsmd.getColumnTypeName(i + 1);
+
                 TableAttr tableAttr = new TableAttr();
                 tableAttr.setName(colName);
                 tableAttr.setType(colType);
@@ -99,8 +100,6 @@ public class TableAttr {
             }
         }
     }
-
-    private boolean primaryKey;
 
     private void determineIfPri(Connection conn, String tableName, String colName) {
         PreparedStatement pStemt = null;
