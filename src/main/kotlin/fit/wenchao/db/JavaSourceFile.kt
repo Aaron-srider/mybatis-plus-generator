@@ -51,7 +51,11 @@ class JavaSourceFile {
 
 fun ofMysqlModel(table: Table, javaPackage: JavaPackage, lang: Lang): JavaSourceFile {
     val javaSourceFile = JavaSourceFile()
-    val javaClassName = fromLowerUnderScore(javaPackage, table.name, "PO")
+
+    table.name ?: throw RuntimeException()
+
+
+    val javaClassName = fromLowerUnderScore(javaPackage, table.name!!, "PO")
     javaSourceFile.srcFileName = javaClassName.toSrcFileName(lang)
     javaSourceFile.javaClassName = javaClassName
     javaSourceFile.packageName = javaPackage.dotSplitName
@@ -70,24 +74,24 @@ fun ofMysqlModel(table: Table, javaPackage: JavaPackage, lang: Lang): JavaSource
                 var count = 0
                 for (tableAttr in table) {
                     count++
-                    if (tableAttr.isPri()) {
+                    if (tableAttr.isPri) {
                         //@TableId(value = "id", type = IdType.AUTO)
-                        jc.atl("TableId(value=\"" + tableAttr.getName() + "\", type=IdType.AUTO)")
+                        jc.atl("TableId(value=\"" + tableAttr.name + "\", type=IdType.AUTO)")
                     }
                     jc.write("var ")
-                    val javaVarName = fromUnderScore(tableAttr.getName())
+                    val javaVarName = fromUnderScore(tableAttr.name)
                     jc.write(javaVarName.name + ": ")
-                    if (tableAttr.getType().equals("int", ignoreCase = true)) {
+                    if (tableAttr.type.equals("int", ignoreCase = true)) {
                         jc.write("Int ")
                         // codeBuilder.append("int ");
                     }
-                    if (tableAttr.getType().equals("bigint", ignoreCase = true)) {
+                    if (tableAttr.type.equals("bigint", ignoreCase = true)) {
                         jc.write("Long ")
                         // codeBuilder.append("int ");
                     }
-                    if (tableAttr.getType().lowercase(Locale.getDefault()).contains("text")
-                        || tableAttr.getType().lowercase(Locale.getDefault()).contains("json")
-                        || tableAttr.getType().equals("varchar", ignoreCase = true)
+                    if (tableAttr.type.lowercase(Locale.getDefault()).contains("text")
+                        || tableAttr.type.lowercase(Locale.getDefault()).contains("json")
+                        || tableAttr.type.equals("varchar", ignoreCase = true)
                     ) {
                         jc.write("String ")
                     }
@@ -123,21 +127,21 @@ fun ofMysqlModel(table: Table, javaPackage: JavaPackage, lang: Lang): JavaSource
             .publicl().classl(javaClassName.name).implementsl("Serializable")
             .blockl { jc: JavaCodeWriter ->
                 for (tableAttr in table) {
-                    if (tableAttr.isPri()) {
+                    if (tableAttr.isPri) {
                         //@TableId(value = "id", type = IdType.AUTO)
-                        jc.atl("TableId(value=\"" + tableAttr.getName() + "\", type=IdType.AUTO)")
+                        jc.atl("TableId(value=\"" + tableAttr.name + "\", type=IdType.AUTO)")
                     }
-                    if (tableAttr.getType().equals("varchar", ignoreCase = true)) {
+                    if (tableAttr.type.equals("varchar", ignoreCase = true)) {
                         jc.write("String ")
                         // codeBuilder.append("String ");
                     }
-                    if (tableAttr.getType().equals("int", ignoreCase = true)) {
+                    if (tableAttr.type.equals("int", ignoreCase = true)) {
                         jc.write("int ")
                         // codeBuilder.append("int ");
                     }
-                    val javaVarName = fromUnderScore(tableAttr.getName())
+                    val javaVarName = fromUnderScore(tableAttr.name)
                     jc.write(javaVarName.name + ";\n")
-                    // codeBuilder.append(javaVarName.getName() + ";\n");
+                    // codeBuilder.append(javaVarName.name + ";\n");
                 }
             }.toString()
     }
