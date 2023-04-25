@@ -26,7 +26,7 @@ public class Table implements Iterable<TableAttr> {
     }
 
     public JavaSourceFile generateJavaModel(JavaPackage javaPackage) {
-        JavaSourceFile javaSourceFile = JavaSourceFile.ofMysqlModel(this, javaPackage);
+        JavaSourceFile javaSourceFile = JavaSourceFile.ofMysqlModel(this, javaPackage, "kotlin");
         //System.out.println(javaSourceFile);
         if (!javaSourceFile.existsIn(javaPackage)) {
             javaSourceFile.put2Package(javaPackage);

@@ -8,18 +8,17 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import static fit.wenchao.db.DatabaseUtilTest.closeConnection;
 
 @Data
 @Slf4j
 public class TableAttr {
 
-    String name;
-    private String type;
-    private boolean isPri;
-    private boolean isIncre;
+    public  String name;
+    public  String type;
+    public  boolean isPri;
+    public  boolean isIncre;
 
-    String comment;
+    public String comment;
 
     private static final String SQL = "SELECT * FROM ";// 数据库操作
 

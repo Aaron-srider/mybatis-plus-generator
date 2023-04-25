@@ -6,7 +6,7 @@ import lombok.var;
 @Data
 public class JavaVarName {
 
-    String name;
+    public String name;
 
     public static JavaVarName fromUnderScore(String name) {
         var javaVarName = new JavaVarName();

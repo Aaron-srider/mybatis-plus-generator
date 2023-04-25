@@ -28,6 +28,10 @@ public class JavaClassName {
         return name + ".java";
     }
 
+    public String toKotlinSrcFileName() {
+        return name + ".kt";
+    }
+
     public String toString() {
         return name;
     }

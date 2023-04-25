@@ -1,54 +1,54 @@
-package fit.wenchao.db;
+package fit.wenchao.db.codeWriter;
 
 import java.util.function.Consumer;
 
-public class JavaCode {
+public class JavaCodeWriter {
 
     StringBuilder codeBuilder;
 
-    JavaCode() {
+    JavaCodeWriter() {
         this.codeBuilder = new StringBuilder();
     }
 
-    public static JavaCode writing() {
-        return new JavaCode();
+    public static JavaCodeWriter writing() {
+        return new JavaCodeWriter();
     }
 
-    public static JavaCode empty() {
-        return new JavaCode();
+    public static JavaCodeWriter empty() {
+        return new JavaCodeWriter();
     }
 
-    public JavaCode packagel(String packName) {
+    public JavaCodeWriter packagel(String packName) {
         this.codeBuilder.append("package ").append(packName).append(";\n");
         return this;
     }
 
-    public JavaCode importl(String classname) {
+    public JavaCodeWriter importl(String classname) {
         this.codeBuilder.append("import ").append(classname).append(";\n");
         return this;
     }
 
-    public JavaCode atl(String annotationName) {
+    public JavaCodeWriter atl(String annotationName) {
         this.codeBuilder.append("@").append(annotationName).append("\n");
         return this;
     }
 
-    public JavaCode publicl() {
+    public JavaCodeWriter publicl() {
         this.codeBuilder.append("public ");
         return this;
     }
 
-    public JavaCode classl(String classname) {
+    public JavaCodeWriter classl(String classname) {
         this.codeBuilder.append("class ").append(classname + " ");
         return this;
     }
 
-    public JavaCode implementsl(String implClassName) {
+    public JavaCodeWriter implementsl(String implClassName) {
         this.codeBuilder.append("implements ").append(implClassName + " ");
         return this;
     }
 
-    public JavaCode blockl(JavaCode blockCode) {
+    public JavaCodeWriter blockl(JavaCodeWriter blockCode) {
         this.codeBuilder.append("{\n");
 
         this.codeBuilder.append(blockCode.toString());
@@ -57,15 +57,14 @@ public class JavaCode {
         return this;
     }
 
-    public JavaCode blockl(Consumer<JavaCode> function) {
+    public JavaCodeWriter blockl(Consumer<JavaCodeWriter> function) {
         this.codeBuilder.append("{\n");
         function.accept(this);
         this.codeBuilder.append("}\n");
         return this;
     }
 
-
-    public JavaCode blockl() {
+    public JavaCodeWriter blockl() {
         this.codeBuilder.append("{\n");
         this.codeBuilder.append("}\n");
         return this;
@@ -75,18 +74,17 @@ public class JavaCode {
         return this.codeBuilder.toString();
     }
 
-
-    public JavaCode interfacel(String interfaceName) {
+    public JavaCodeWriter interfacel(String interfaceName) {
         this.codeBuilder.append("interface ").append(interfaceName + " ");
         return this;
     }
 
-    public JavaCode extendsl(String classname) {
+    public JavaCodeWriter extendsl(String classname) {
         this.codeBuilder.append("extends ").append(classname + " ");
         return this;
     }
 
-    public JavaCode write(String str) {
+    public JavaCodeWriter write(String str) {
         this.codeBuilder.append(str);
         return this;
     }
