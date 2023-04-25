@@ -21,7 +21,7 @@ public class JavaPackage {
         String projectPath = file.getAbsolutePath();
 
         javaPackage.relativePackageString = relativePackageString;
-        javaPackage.setPackage(projectPath + "/src/main/java/" + relativePackageString);
+        javaPackage.setPackage(projectPath + "/src/main/kotlin/" + relativePackageString);
         if(!new File(javaPackage.absolutePackageString).exists()) {
             try {
                 Files.createDirectories(new File(javaPackage.absolutePackageString).toPath());

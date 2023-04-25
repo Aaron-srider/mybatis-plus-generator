@@ -1,5 +1,8 @@
 package fit.wenchao.db;
 
+import com.sun.org.apache.bcel.internal.classfile.Code;
+import fit.wenchao.db.codeWriter.CodeWriter;
+import fit.wenchao.db.codeWriter.CodeWriterKt;
 import fit.wenchao.db.codeWriter.JavaCodeWriter;
 import fit.wenchao.db.codeWriter.KotlinCodeWriter;
 import lombok.var;
@@ -23,26 +26,16 @@ public class JavaSourceFile {
     String packageName;
 
     public static JavaSourceFile ofMysqlModel(Table table, JavaPackage javaPackage, String lang) {
-        if(lang == null || (!lang.equals("java") && !lang.equals("kotlin"))) {
-            // default
-            lang = "java";
-        }
+        lang = determineLang(lang);
 
         JavaSourceFile javaSourceFile = new JavaSourceFile();
         StringBuilder codeBuilder = new StringBuilder();
 
         JavaClassName javaClassName = JavaClassName.fromLowerUnderScore(javaPackage, table.getName(), "PO");
 
-        if (lang.equals("kotlin")) {
-            javaSourceFile.srcFileName = javaClassName.toKotlinSrcFileName();
-        } else {
-            javaSourceFile.srcFileName = javaClassName.toJavaSrcFileName();
-        }
-
+        javaSourceFile.srcFileName = javaClassName.toSrcFileName(lang);
         javaSourceFile.javaClassName = javaClassName;
         javaSourceFile.packageName = javaPackage.getDotSplitName();
-        // JavaClassName javaClassName = JavaClassName.fromLowerUnderScore("user_action");
-        //@TableName("`dept`")
 
         String code = "";
 
@@ -62,7 +55,7 @@ public class JavaSourceFile {
                         int size = table.attrs.size();
                         int count = 0;
                         for (TableAttr tableAttr : table) {
-count ++;
+                            count++;
                             if (tableAttr.isPri()) {
                                 //@TableId(value = "id", type = IdType.AUTO)
                                 jc.atl("TableId(value=\"" + tableAttr.getName() + "\", type=IdType.AUTO)");
@@ -80,15 +73,14 @@ count ++;
                                 jc.write("Long ");
                                 // codeBuilder.append("int ");
                             }
-                            if(tableAttr.getType().toLowerCase().contains("text")
+                            if (tableAttr.getType().toLowerCase().contains("text")
                                     || tableAttr.getType().toLowerCase().contains("json")
                                     || tableAttr.getType().equalsIgnoreCase("varchar")) {
                                 jc.write("String ");
                             }
 
-                            if(count == size
-                            )
-                            {
+                            if (count == size
+                            ) {
                                 jc.write("?");
 
                             } else {
@@ -146,65 +138,102 @@ count ++;
                     }).toString();
         }
 
-        javaSourceFile.srcCode =code;
+        javaSourceFile.srcCode = code;
         return javaSourceFile;
     }
 
-    public static JavaSourceFile ofMybatisMapper(Table table, JavaPackage javaPackage, JavaSourceFile poSourceFile) {
+    private static String determineLang(String lang) {
+        if (lang == null || (!lang.equals("java") && !lang.equals("kotlin"))) {
+            // default
+            lang = "java";
+        }
+        return lang;
+    }
+
+    public static JavaSourceFile ofMybatisMapper(Table table, JavaPackage javaPackage, JavaSourceFile poSourceFile, String lang) {
+        lang = determineLang(lang);
+
         JavaSourceFile javaSourceFile = new JavaSourceFile();
         StringBuilder codeBuilder = new StringBuilder();
 
         JavaClassName poClassName = poSourceFile.getJavaClassName();
 
         JavaClassName mapperClassName = JavaClassName.fromLowerUnderScore(javaPackage, table.getName(), "Mapper");
-        // poSourceFile.
-        javaSourceFile.srcFileName = mapperClassName.toJavaSrcFileName();
+
+        javaSourceFile.srcFileName = mapperClassName.toSrcFileName(lang);
         javaSourceFile.javaClassName = mapperClassName;
         javaSourceFile.packageName = javaPackage.getDotSplitName();
-        // JavaClassName javaClassName = JavaClassName.fromLowerUnderScore("user_action");
+
+        String code = null;
+        if (lang.equals("kotlin")) {
+            KotlinCodeWriter javaCode =
+                    CodeWriterKt.kotlinWriter()
+                            .packagel(javaPackage.getDotSplitName())
+                            .importl(poClassName.getFullName())
+                            .importl("org.apache.ibatis.annotations.Mapper")
+                            .importl("com.baomidou.mybatisplus.core.mapper.BaseMapper")
+                            .atl("Mapper")
+                            .interfacel(mapperClassName.getName()).extendsFirstl("BaseMapper<" + poClassName.getName() + ">")
+                            .blockl();
+            code = javaCode.toString();
+        } else {
+            JavaCodeWriter javaCode =
+                    CodeWriterKt.javaWriter()
+                            .packagel(javaPackage.getDotSplitName())
+                            .importl(poClassName.getFullName())
+                            .importl("org.apache.ibatis.annotations.Mapper")
+                            .importl("com.baomidou.mybatisplus.core.mapper.BaseMapper")
+                            .atl("Mapper")
+                            .publicl().interfacel(mapperClassName.getName()).extendsl("BaseMapper<" + poClassName.getName() + ">")
+                            .blockl();
+            code = javaCode.toString();
+        }
 
 
-        JavaCodeWriter javaCode =
-                JavaCodeWriter.writing()
-                        .packagel(javaPackage.getDotSplitName())
-                        .importl(poClassName.getFullName())
-                        .importl("org.apache.ibatis.annotations.Mapper")
-                        .importl("com.baomidou.mybatisplus.core.mapper.BaseMapper")
-                        .atl("Mapper")
-                        .publicl().interfacel(mapperClassName.getName()).extendsl("BaseMapper<" + poClassName.getName() + ">")
-                        .blockl();
-
-        javaSourceFile.srcCode = javaCode.toString();
+        javaSourceFile.srcCode = code;
         return javaSourceFile;
     }
 
-    public static JavaSourceFile ofServiceImpl(Table table, JavaPackage javaPackage, JavaSourceFile serviceSourceFile) {
+    public static JavaSourceFile ofServiceImpl(Table table, JavaPackage javaPackage, JavaSourceFile serviceSourceFile, String lang) {
+        lang = determineLang(lang);
         JavaSourceFile javaSourceFile = new JavaSourceFile();
-        StringBuilder codeBuilder = new StringBuilder();
 
         JavaClassName serviceClassName = serviceSourceFile.getJavaClassName();
 
         JavaClassName serviceImplClassName = JavaClassName.fromLowerUnderScore(javaPackage,
                 table.getName(),
                 "ServiceImpl");
-        // poSourceFile.
-        javaSourceFile.srcFileName = serviceImplClassName.toJavaSrcFileName();
+        javaSourceFile.srcFileName = serviceImplClassName.toSrcFileName(lang);
         javaSourceFile.javaClassName = serviceImplClassName;
         javaSourceFile.packageName = javaPackage.getDotSplitName();
-        // JavaClassName javaClassName = JavaClassName.fromLowerUnderScore("user_action");
-        // TODO
-        JavaCodeWriter javaCode =
-                JavaCodeWriter.writing()
-                        .packagel(javaPackage.getDotSplitName())
-                        .importl(serviceClassName.getFullName())
-                        .importl("lombok.extern.slf4j.Slf4j")
-                        .importl("org.springframework.stereotype.Service")
-                        .atl("Service")
-                        .atl("Slf4j")
-                        .publicl().classl(serviceImplClassName.getName()).implementsl(serviceSourceFile.getJavaClassName().getName())
-                        .blockl();
 
-        javaSourceFile.srcCode = javaCode.toString();
+        String code = null;
+        if (lang.equals("kotlin")) {
+            KotlinCodeWriter javaCode =
+                    CodeWriterKt.kotlinWriter()
+                            .packagel(javaPackage.getDotSplitName())
+                            .importl(serviceClassName.getFullName())
+                            .importl("org.springframework.stereotype.Service")
+                            .atl("Service")
+                            .classl(serviceImplClassName.getName()).extendsFirstl(serviceSourceFile.getJavaClassName().getName())
+                            .blockl();
+            code = javaCode.toString();
+        } else {
+            JavaCodeWriter javaCode =
+                    CodeWriterKt.javaWriter()
+                            .packagel(javaPackage.getDotSplitName())
+                            .importl(serviceClassName.getFullName())
+                            .importl("lombok.extern.slf4j.Slf4j")
+                            .importl("org.springframework.stereotype.Service")
+                            .atl("Service")
+                            .atl("Slf4j")
+                            .publicl().classl(serviceImplClassName.getName()).implementsl(serviceSourceFile.getJavaClassName().getName())
+                            .blockl();
+            code = javaCode.toString();
+        }
+
+
+        javaSourceFile.srcCode = code;
         return javaSourceFile;
     }
 
@@ -213,52 +242,82 @@ count ++;
         return this.javaClassName;
     }
 
-    public static JavaSourceFile ofDao(Table table, JavaPackage javaPackage, JavaSourceFile poJavaSourceFile) {
+    public static JavaSourceFile ofDao(Table table, JavaPackage javaPackage, JavaSourceFile poJavaSourceFile, String lang) {
+        lang = determineLang(lang);
         JavaSourceFile javaSourceFile = new JavaSourceFile();
-        StringBuilder codeBuilder = new StringBuilder();
 
         JavaClassName daoClassName = JavaClassName.fromLowerUnderScore(javaPackage, table.getName(), "Dao");
-        javaSourceFile.srcFileName = daoClassName.toJavaSrcFileName();
+        javaSourceFile.srcFileName = daoClassName.toSrcFileName(lang);
         javaSourceFile.javaClassName = daoClassName;
         javaSourceFile.packageName = javaPackage.getDotSplitName();
-        // JavaClassName javaClassName = JavaClassName.fromLowerUnderScore("user_action");
 
-        JavaCodeWriter javaCode = JavaCodeWriter
-                .writing()
-                .packagel(javaPackage.getDotSplitName())
-                .importl(poJavaSourceFile.getJavaClassName().getFullName())
-                .importl("com.baomidou.mybatisplus.extension.service.IService")
-                .publicl().interfacel(daoClassName.getName()).extendsl("IService<" + poJavaSourceFile.getJavaClassName().getName() + ">")
-                .blockl();
+        String code = null;
+        if (lang.equals("kotlin")) {
+            KotlinCodeWriter javaCode =
+                    CodeWriterKt.kotlinWriter()
+                            .packagel(javaPackage.getDotSplitName())
+                            .importl(poJavaSourceFile.getJavaClassName().getFullName())
+                            .importl("com.baomidou.mybatisplus.extension.service.IService")
+                            .interfacel(daoClassName.getName()).extendsFirstl("IService<" + poJavaSourceFile.getJavaClassName().getName() + ">")
+                            .blockl();
+            code = javaCode.toString();
+        } else {
+            JavaCodeWriter javaCode =
+                    CodeWriterKt.javaWriter()
+                            .packagel(javaPackage.getDotSplitName())
+                            .importl(poJavaSourceFile.getJavaClassName().getFullName())
+                            .importl("com.baomidou.mybatisplus.extension.service.IService")
+                            .publicl().interfacel(daoClassName.getName()).extendsl("IService<" + poJavaSourceFile.getJavaClassName().getName() + ">")
+                            .blockl();
+            code = javaCode.toString();
+        }
 
-        javaSourceFile.srcCode = javaCode.toString();
+        javaSourceFile.srcCode = code;
         return javaSourceFile;
     }
 
-    public static JavaSourceFile ofDaoImpl(Table table, JavaPackage javaPackage, JavaSourceFile mapperSourceFile, JavaSourceFile poSourceFile, JavaSourceFile daoSourceFile) {
+    public static JavaSourceFile ofDaoImpl(Table table, JavaPackage javaPackage, JavaSourceFile mapperSourceFile, JavaSourceFile poSourceFile, JavaSourceFile daoSourceFile, String lang) {
+        lang = determineLang(lang);
         JavaSourceFile javaSourceFile = new JavaSourceFile();
-        StringBuilder codeBuilder = new StringBuilder();
 
         JavaClassName daoImplClassName = JavaClassName.fromLowerUnderScore(javaPackage, table.getName(), "DaoImpl");
-        javaSourceFile.srcFileName = daoImplClassName.toJavaSrcFileName();
+        javaSourceFile.srcFileName = daoImplClassName.toSrcFileName(lang);
         javaSourceFile.javaClassName = daoImplClassName;
         javaSourceFile.packageName = javaPackage.getDotSplitName();
-        // JavaClassName javaClassName = JavaClassName.fromLowerUnderScore("user_action");
 
-        JavaCodeWriter javaCode =
-                JavaCodeWriter.writing()
-                        .packagel(javaPackage.getDotSplitName())
-                        .importl("org.springframework.stereotype.Repository")
-                        .importl("com.baomidou.mybatisplus.extension.service.impl.ServiceImpl")
-                        .importl(poSourceFile.getJavaClassName().getFullName())
-                        .importl(mapperSourceFile.getJavaClassName().getFullName())
-                        .importl(daoSourceFile.getJavaClassName().getFullName())
-                        .atl("Repository")
-                        .publicl().classl(daoImplClassName.getName()).extendsl("ServiceImpl<" + mapperSourceFile.getJavaClassName().getName() + "," + poSourceFile.getJavaClassName().getName() + ">").implementsl(
-                                daoSourceFile.getJavaClassName().getName())
-                        .blockl();
+        String code = null;
+        if (lang.equals("kotlin")) {
+            KotlinCodeWriter javaCode =
+                    CodeWriterKt.kotlinWriter()
+                            .packagel(javaPackage.getDotSplitName())
+                            .importl("org.springframework.stereotype.Repository")
+                            .importl("com.baomidou.mybatisplus.extension.service.impl.ServiceImpl")
+                            .importl(poSourceFile.getJavaClassName().getFullName())
+                            .importl(mapperSourceFile.getJavaClassName().getFullName())
+                            .importl(daoSourceFile.getJavaClassName().getFullName())
+                            .atl("Repository")
+                            .classl(daoImplClassName.getName())
+                            .extendsFirstl("ServiceImpl<" + mapperSourceFile.getJavaClassName().getName() + "," + poSourceFile.getJavaClassName().getName() + ">()")
+                            .extendsThenl(daoSourceFile.getJavaClassName().getName())
+                            .blockl();
+            code = javaCode.toString();
+        } else {
+            JavaCodeWriter javaCode =
+                    JavaCodeWriter.writing()
+                            .packagel(javaPackage.getDotSplitName())
+                            .importl("org.springframework.stereotype.Repository")
+                            .importl("com.baomidou.mybatisplus.extension.service.impl.ServiceImpl")
+                            .importl(poSourceFile.getJavaClassName().getFullName())
+                            .importl(mapperSourceFile.getJavaClassName().getFullName())
+                            .importl(daoSourceFile.getJavaClassName().getFullName())
+                            .atl("Repository")
+                            .publicl().classl(daoImplClassName.getName()).extendsl("ServiceImpl<" + mapperSourceFile.getJavaClassName().getName() + "," + poSourceFile.getJavaClassName().getName() + ">").implementsl(
+                                    daoSourceFile.getJavaClassName().getName())
+                            .blockl();
+            code = javaCode.toString();
+        }
 
-        javaSourceFile.srcCode = javaCode.toString();
+        javaSourceFile.srcCode = code;
         return javaSourceFile;
     }
 
@@ -280,24 +339,35 @@ count ++;
         }
     }
 
-    public static JavaSourceFile ofService(Table table, JavaPackage javaPackage) {
+    public static JavaSourceFile ofService(Table table, JavaPackage javaPackage, String lang) {
+        lang = determineLang(lang);
         JavaSourceFile javaSourceFile = new JavaSourceFile();
 
-
         JavaClassName serviceClassName = JavaClassName.fromLowerUnderScore(javaPackage, table.getName(), "Service");
-        // poSourceFile.
-        javaSourceFile.srcFileName = serviceClassName.toJavaSrcFileName();
+        javaSourceFile.srcFileName = serviceClassName.toSrcFileName(lang);
         javaSourceFile.javaClassName = serviceClassName;
         javaSourceFile.packageName = javaPackage.getDotSplitName();
-        // JavaClassName javaClassName = JavaClassName.fromLowerUnderScore("user_action");
 
-        JavaCodeWriter javaCode =
-                JavaCodeWriter.writing()
-                        .packagel(javaPackage.getDotSplitName())
-                        .publicl().interfacel(serviceClassName.getName())
-                        .blockl();
 
-        javaSourceFile.srcCode = javaCode.toString();
+        String code = null;
+        if ("kotlin".equals(lang)) {
+            KotlinCodeWriter javaCode =
+                    CodeWriterKt.kotlinWriter()
+                            .packagel(javaPackage.getDotSplitName())
+                            .interfacel(serviceClassName.getName())
+                            .blockl();
+            code = javaCode.toString();
+        } else {
+            JavaCodeWriter javaCode =
+                    JavaCodeWriter.writing()
+                            .packagel(javaPackage.getDotSplitName())
+                            .publicl().interfacel(serviceClassName.getName())
+                            .blockl();
+            code = javaCode.toString();
+        }
+
+
+        javaSourceFile.srcCode = code;
         return javaSourceFile;
     }
 

@@ -1,9 +1,8 @@
 package fit.wenchao.db;
 
-import fit.wenchao.db.generator.Generator;
+import fit.wenchao.db.generator.GeneratorKt;
 import lombok.var;
 
-import java.io.File;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,15 +13,9 @@ import static fit.wenchao.db.dbConnection.DatabaseConnection.getConnection;
 
 public class DatabaseUtilTest {
 
-    private static final String SQL = "SELECT * FROM ";// 数据库操作
-
-
     public static void main(String[] args) {
-
         var tables = getTables();
-
-        Generator.generate(tables);
-
+        GeneratorKt.generate(tables);
     }
 
     private static List<Table> getTables() {

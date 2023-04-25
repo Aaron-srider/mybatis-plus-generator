@@ -1,13 +1,12 @@
 package fit.wenchao.db.dbConnection
 
-import fit.wenchao.db.log.Log
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.SQLException
 
 class DatabaseConnection {
 
-    companion object : Log() {
+    companion object {
         
         private const val DRIVER = "com.mysql.jdbc.Driver"
         private const val DATABASE_URL =
@@ -19,7 +18,7 @@ class DatabaseConnection {
             try {
                 Class.forName(DRIVER)
             } catch (e: ClassNotFoundException) {
-                log.error("can not load jdbc driver", e)
+                println(e.message)
             }
         }
 
@@ -33,7 +32,7 @@ class DatabaseConnection {
                     PASSWORD
                 )
             } catch (e: SQLException) {
-                log.error("get connection failure", e)
+                println(e.message)
             }
             return conn
         }
@@ -43,7 +42,7 @@ class DatabaseConnection {
                 try {
                     conn.close()
                 } catch (e: SQLException) {
-                    log.error("close connection failure", e)
+                    println(e.message)
                 }
             }
         }
