@@ -54,13 +54,11 @@ class KotlinCodeWriter {
         return this
     }
 
-
     fun blockl(): KotlinCodeWriter {
         codeBuilder.append("{\n")
         codeBuilder.append("}\n")
         return this
     }
-
 
     fun interfacel(interfaceName: String): KotlinCodeWriter {
         codeBuilder.append("interface ").append("$interfaceName ")

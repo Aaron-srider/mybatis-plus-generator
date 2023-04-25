@@ -13,10 +13,10 @@ import java.util.List;
 @Slf4j
 public class TableAttr {
 
-    public  String name;
-    public  String type;
-    public  boolean isPri;
-    public  boolean isIncre;
+    public String name;
+    public String type;
+    public boolean isPri;
+    public boolean isIncre;
 
     public String comment;
 
@@ -25,14 +25,14 @@ public class TableAttr {
     public static List<TableAttr> fromTable(Connection conn, Table table) {
         List<String> columnNames = new ArrayList<>();
         List<TableAttr> tableAttrs = new ArrayList<>();
-        //与数据库的连接
+        // 与数据库的连接
         PreparedStatement ps = null;
-        String tableSql = SQL + table.getName();
+        String tableSql = SQL + table.name;
         try {
             ps = conn.prepareStatement(tableSql);
-            //结果集元数据
+            // 结果集元数据
             ResultSetMetaData rsmd = ps.getMetaData();
-            //表列数
+            // 表列数
             int tableColumnCount = rsmd.getColumnCount();
             for (int i = 0; i < tableColumnCount; i++) {
                 String colName = rsmd.getColumnName(i + 1);
@@ -41,23 +41,20 @@ public class TableAttr {
                 TableAttr tableAttr = new TableAttr();
                 tableAttr.setName(colName);
                 tableAttr.setType(colType);
-                tableAttr.readComment(conn, table.getName(), colName);
-                tableAttr.determineIfPri(conn, table.getName(), colName);
-                tableAttr.determineIfAutoIncre(conn, table.getName(), colName);
+                tableAttr.readComment(conn, table.name, colName);
+                tableAttr.determineIfPri(conn, table.name, colName);
+                tableAttr.determineIfAutoIncre(conn, table.name, colName);
 
                 tableAttrs.add(tableAttr);
                 columnNames.add(colName);
             }
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             log.error("getColumnNames failure", e);
-        }
-        finally {
+        } finally {
             if (ps != null) {
                 try {
                     ps.close();
-                }
-                catch (SQLException e) {
+                } catch (SQLException e) {
                     log.error("getColumnNames close pstem and connection failure", e);
                 }
             }
@@ -77,23 +74,19 @@ public class TableAttr {
                     String Extra = rs.getString("Extra");
                     if (Extra != null && Extra.contains("auto_increment")) {
                         isIncre = true;
-                    }
-                    else {
+                    } else {
                         isIncre = false;
                     }
                     break;
                 }
             }
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
-        }
-        finally {
+        } finally {
             if (rs != null) {
                 try {
                     rs.close();
-                }
-                catch (SQLException e) {
+                } catch (SQLException e) {
                     log.error("getColumnComments close ResultSet and connection failure", e);
                 }
             }
@@ -112,23 +105,19 @@ public class TableAttr {
                     String KEY = rs.getString("Key");
                     if (KEY != null && KEY.contains("PRI")) {
                         isPri = true;
-                    }
-                    else {
+                    } else {
                         isPri = false;
                     }
                     break;
                 }
             }
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
-        }
-        finally {
+        } finally {
             if (rs != null) {
                 try {
                     rs.close();
-                }
-                catch (SQLException e) {
+                } catch (SQLException e) {
                     log.error("getColumnComments close ResultSet and connection failure", e);
                 }
             }
@@ -137,7 +126,7 @@ public class TableAttr {
 
     private void readComment(Connection conn, String tableName, String colName) {
         PreparedStatement pStemt = null;
-        List<String> columnComments = new ArrayList<>();//列名注释集合
+        List<String> columnComments = new ArrayList<>();// 列名注释集合
         ResultSet rs = null;
         try {
             pStemt = conn.prepareStatement("show full columns from " + tableName);
@@ -149,16 +138,13 @@ public class TableAttr {
                     break;
                 }
             }
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
-        }
-        finally {
+        } finally {
             if (rs != null) {
                 try {
                     rs.close();
-                }
-                catch (SQLException e) {
+                } catch (SQLException e) {
                     log.error("getColumnComments close ResultSet and connection failure", e);
                 }
             }

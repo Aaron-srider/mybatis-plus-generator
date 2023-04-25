@@ -2,6 +2,7 @@ package fit.wenchao.db.generator
 
 import fit.wenchao.db.JavaPackage
 import fit.wenchao.db.Table
+import fit.wenchao.db.from
 
 class Generator {
 
@@ -17,19 +18,19 @@ fun generate(tables: MutableList<Table>) {
         }
 
         //System.out.println(new File(".").getAbsolutePath());
-        val poSourceFile = table.generateJavaModel(JavaPackage.from("fit/wenchao/db/dao/po"))
+        val poSourceFile = table.generateJavaModel(from("fit/wenchao/db/dao/po"))
         val mapperSourceFile = table.generateMybatisMapper(
-            JavaPackage.from("fit/wenchao/db/dao/mapper"),
+            from("fit/wenchao/db/dao/mapper"),
             poSourceFile
         )
-        val daoSourceFile = table.generateDao(JavaPackage.from("fit/wenchao/db/dao/repo"), poSourceFile)
+        val daoSourceFile = table.generateDao(from("fit/wenchao/db/dao/repo"), poSourceFile)
         table.generateDaoImpl(
-            JavaPackage.from("fit/wenchao/db/dao/repo/impl"),
+            from("fit/wenchao/db/dao/repo/impl"),
             mapperSourceFile,
             poSourceFile,
             daoSourceFile
         )
-        val serviceSourceFile = table.generateService(JavaPackage.from("fit/wenchao/db/service"))
-        table.generateServiceImpl(JavaPackage.from("fit/wenchao/db/service/impl"), serviceSourceFile)
+        val serviceSourceFile = table.generateService(from("fit/wenchao/db/service"))
+        table.generateServiceImpl(from("fit/wenchao/db/service/impl"), serviceSourceFile)
     }
 }

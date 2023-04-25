@@ -1,5 +1,7 @@
 package fit.wenchao.db
 
+import fit.wenchao.db.constants.Lang
+
 class JavaClassName {
 
     lateinit var name: String;
@@ -29,8 +31,8 @@ class JavaClassName {
         return "$name.kt"
     }
 
-    fun toSrcFileName(lang: String): String {
-        return if (lang == "kotlin") {
+    fun toSrcFileName(lang: Lang): String {
+        return if (lang == Lang.KOTLIN) {
             toKotlinSrcFileName()
         } else {
             toJavaSrcFileName()

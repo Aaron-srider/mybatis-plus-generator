@@ -1,20 +1,15 @@
 package fit.wenchao.db;
 
+import fit.wenchao.db.constants.Lang;
+
 import java.util.Iterator;
 import java.util.List;
 
 public class Table implements Iterable<TableAttr> {
-    String name;
 
-    List<TableAttr> attrs;
+    public String name;
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
+    public List<TableAttr> attrs;
 
     @Override
     public Iterator<TableAttr> iterator() {
@@ -26,18 +21,18 @@ public class Table implements Iterable<TableAttr> {
     }
 
     public JavaSourceFile generateJavaModel(JavaPackage javaPackage) {
-        JavaSourceFile javaSourceFile = JavaSourceFile.ofMysqlModel(this, javaPackage, "kotlin");
+        JavaSourceFile javaSourceFile = JavaSourceFileKt.ofMysqlModel(this, javaPackage, Lang.KOTLIN);
         // System.out.println(javaSourceFile);
-        if (!javaSourceFile.existsIn(javaPackage)) {
+        if (javaSourceFile.notExistsIn(javaPackage)) {
             javaSourceFile.put2Package(javaPackage);
         }
         return javaSourceFile;
     }
 
     public JavaSourceFile generateMybatisMapper(JavaPackage javaPackage, JavaSourceFile poSourceFile) {
-        JavaSourceFile javaSourceFile = JavaSourceFile.ofMybatisMapper(this, javaPackage, poSourceFile, "kotlin");
+        JavaSourceFile javaSourceFile = JavaSourceFileKt.ofMybatisMapper(this, javaPackage, poSourceFile, Lang.KOTLIN);
         // System.out.println(javaSourceFile);
-        if (!javaSourceFile.existsIn(javaPackage)) {
+        if (javaSourceFile.notExistsIn(javaPackage)) {
             javaSourceFile.put2Package(javaPackage);
         }
 
@@ -45,25 +40,25 @@ public class Table implements Iterable<TableAttr> {
     }
 
     public JavaSourceFile generateDao(JavaPackage javaPackage, JavaSourceFile poJavaSourceFile) {
-        JavaSourceFile javaSourceFile = JavaSourceFile.ofDao(this, javaPackage, poJavaSourceFile, "kotlin");
+        JavaSourceFile javaSourceFile = JavaSourceFileKt.ofDao(this, javaPackage, poJavaSourceFile, Lang.KOTLIN);
         // System.out.println(javaSourceFile);
-        if (!javaSourceFile.existsIn(javaPackage)) {
+        if (javaSourceFile.notExistsIn(javaPackage)) {
             javaSourceFile.put2Package(javaPackage);
         }
         return javaSourceFile;
     }
 
     public void generateDaoImpl(JavaPackage javaPackage, JavaSourceFile mapperSourceFile, JavaSourceFile poSourceFile, JavaSourceFile daoSourceFile) {
-        JavaSourceFile javaSourceFile = JavaSourceFile.ofDaoImpl(this, javaPackage, mapperSourceFile, poSourceFile, daoSourceFile,"kotlin" );
+        JavaSourceFile javaSourceFile = JavaSourceFileKt.ofDaoImpl(this, javaPackage, mapperSourceFile, poSourceFile, daoSourceFile,Lang.KOTLIN );
         // System.out.println(javaSourceFile);
-        if (!javaSourceFile.existsIn(javaPackage)) {
+        if (javaSourceFile.notExistsIn(javaPackage)) {
             javaSourceFile.put2Package(javaPackage);
         }
     }
 
     public JavaSourceFile generateService(JavaPackage javaPackage) {
-        JavaSourceFile javaSourceFile = JavaSourceFile.ofService(this, javaPackage,"kotlin" );
-        if (!javaSourceFile.existsIn(javaPackage)) {
+        JavaSourceFile javaSourceFile = JavaSourceFileKt.ofService(this, javaPackage,Lang.KOTLIN );
+        if (javaSourceFile.notExistsIn(javaPackage)) {
             javaSourceFile.put2Package(javaPackage);
         }
 
@@ -71,9 +66,9 @@ public class Table implements Iterable<TableAttr> {
     }
 
     public void generateServiceImpl(JavaPackage javaPackage, JavaSourceFile serviceSourceFile) {
-        JavaSourceFile javaSourceFile = JavaSourceFile.ofServiceImpl(this, javaPackage, serviceSourceFile,"kotlin" );
+        JavaSourceFile javaSourceFile = JavaSourceFileKt.ofServiceImpl(this, javaPackage, serviceSourceFile,Lang.KOTLIN );
         // System.out.println(javaSourceFile);
-        if (!javaSourceFile.existsIn(javaPackage)) {
+        if (javaSourceFile.notExistsIn(javaPackage)) {
             javaSourceFile.put2Package(javaPackage);
         }
     }

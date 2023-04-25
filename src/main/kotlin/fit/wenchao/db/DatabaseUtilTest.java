@@ -33,7 +33,7 @@ public class DatabaseUtilTest {
                 }
                 Table table = new Table();
                 String tableName = rs.getString(3);
-                table.setName(tableName);
+                table.name = tableName;
                 var attrs = TableAttr.fromTable(conn, table);
                 table.setAttrs(attrs);
                 tables.add(table);
