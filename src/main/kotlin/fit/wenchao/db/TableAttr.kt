@@ -51,11 +51,11 @@ class TableAttr {
         }
     }
 
-    fun readComment(conn: Connection, colName: String) {
+    fun readComment(conn: Connection, tableName: String, colName: String) {
         var pStemt: PreparedStatement? = null
         var rs: ResultSet? = null
         try {
-            pStemt = conn.prepareStatement("show full columns from $name")
+            pStemt = conn.prepareStatement("show full columns from $tableName")
             rs = pStemt.executeQuery()
             while (rs.next()) {
                 val fieldName = rs.getString("Field")
@@ -93,7 +93,7 @@ fun fromTable(conn: Connection, table: Table): List<TableAttr> {
             val tableAttr = TableAttr()
             tableAttr.name = colName
             tableAttr.type = colType
-            tableAttr.readComment(conn, colName)
+            tableAttr.readComment(conn, table.name, colName)
             tableAttr.determineIfPri(conn, table.name, colName)
             tableAttr.determineIfAutoIncre(conn, table.name, colName)
 
