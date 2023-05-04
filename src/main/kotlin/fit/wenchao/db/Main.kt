@@ -2,6 +2,7 @@ package fit.wenchao.db;
 
 import fit.wenchao.db.JavaPackage.Companion.from
 import fit.wenchao.db.dbConnection.getConnection
+import fit.wenchao.db.generator.GeneratorContext
 import java.sql.Connection
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
@@ -9,12 +10,8 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 
-class Main {
-
-}
 
 object Generator {
-
 
     lateinit var baseDir: String
 
@@ -22,7 +19,6 @@ object Generator {
         val props = Properties()
         val inputStream = javaClass.classLoader.getResourceAsStream("config.properties")
         inputStream?.let {
-
             props.load(inputStream)
         } ?: run {
             throw RuntimeException("config.properties not found")
@@ -66,7 +62,7 @@ object Generator {
 
     fun generate() {
 
-        val tables = Generator.getTables()
+        val tables = getTables()
 
         for (table in tables) {
             println("tablename: " + table.name)
