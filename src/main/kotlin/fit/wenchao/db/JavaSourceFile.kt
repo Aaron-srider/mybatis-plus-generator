@@ -6,6 +6,7 @@ import fit.wenchao.db.codeWriter.KotlinCodeWriter
 import fit.wenchao.db.codeWriter.javaWriter
 import fit.wenchao.db.codeWriter.kotlinWriter
 import fit.wenchao.db.constants.Lang
+import fit.wenchao.db.logger.Log
 import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.nio.charset.StandardCharsets
@@ -13,33 +14,61 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.*
 
-class JavaSourceFile {
-    var javaClassName: JavaClassName? = null
-    var srcFileName: String? = null
-    var srcCode: String? = null
-    var packageName: String? = null
+class JavaSourceFile: Log {
+
+    var javaPackage: JavaPackage
+    var javaClassName: JavaClassName
+    var srcFileName: String
+    var srcCode: String
+    var packageName: String
+
+    constructor(clazzName: JavaClassName, language: Lang, srcCode:String)  {
+        this.srcFileName = clazzName.toSrcFileName(language)
+        this.javaClassName = clazzName
+        this.javaPackage = clazzName.javaPackage
+        this.packageName = clazzName.javaPackage.dotSplitName
+        this.srcCode = srcCode
+    }
+
     fun put2Package(javaPackage: JavaPackage) {
         val javaPackageFile = javaPackage.file
         val javaSourceFilePath = javaPackageFile.toPath().resolve(Paths.get(srcFileName))
 
-        srcCode?.let {
-            try {
-                Files.newOutputStream(javaSourceFilePath).use { out ->
-                    ByteArrayInputStream(it.toByteArray(StandardCharsets.UTF_8)).use { `in` ->
-                        val buffer = ByteArray(1024 * 1024)
-                        var len: Int
-                        while (`in`.read(buffer).also { len = it } != -1) {
-                            out.write(buffer, 0, len)
-                        }
-                        out.flush()
+        try {
+            Files.newOutputStream(javaSourceFilePath).use { out ->
+                ByteArrayInputStream(srcCode.toByteArray(StandardCharsets.UTF_8)).use { `in` ->
+                    val buffer = ByteArray(1024 * 1024)
+                    var len: Int
+                    while (`in`.read(buffer).also { len = it } != -1) {
+                        out.write(buffer, 0, len)
                     }
+                    out.flush()
                 }
-            } catch (e: IOException) {
-                throw RuntimeException(e)
             }
+        } catch (e: IOException) {
+            throw RuntimeException(e)
         }
 
+    }
 
+
+    fun put2Package() {
+        val javaPackageFile = javaPackage.file
+        val javaSourceFilePath = javaPackageFile.toPath().resolve(Paths.get(srcFileName))
+        try {
+            Files.newOutputStream(javaSourceFilePath).use { out ->
+                ByteArrayInputStream(srcCode.toByteArray(StandardCharsets.UTF_8)).use { `in` ->
+                    val buffer = ByteArray(1024 * 1024)
+                    var len: Int
+                    while (`in`.read(buffer).also { len = it } != -1) {
+                        out.write(buffer, 0, len)
+                    }
+                    out.flush()
+                }
+            }
+        } catch (e: IOException) {
+            throw RuntimeException(e)
+        }
     }
 
     fun notExistsIn(javaPackage: JavaPackage): Boolean {
@@ -47,18 +76,21 @@ class JavaSourceFile {
         return !srcNames.contains(srcFileName)
     }
 
+    fun notExists(): Boolean {
+        val srcNames = javaPackage.listSourceFileNames()
+        return !srcNames.contains(srcFileName)
+    }
+
 }
 
 fun ofMysqlModel(table: Table, javaPackage: JavaPackage, lang: Lang): JavaSourceFile {
-    val javaSourceFile = JavaSourceFile()
+
 
     table.name ?: throw RuntimeException()
 
 
     val javaClassName = fromLowerUnderScore(javaPackage, table.name!!, "PO")
-    javaSourceFile.srcFileName = javaClassName.toSrcFileName(lang)
-    javaSourceFile.javaClassName = javaClassName
-    javaSourceFile.packageName = javaPackage.dotSplitName
+
 
     // if kotlin
     var code = if (lang == Lang.KOTLIN) {
@@ -145,7 +177,7 @@ fun ofMysqlModel(table: Table, javaPackage: JavaPackage, lang: Lang): JavaSource
                 }
             }.toString()
     }
-    javaSourceFile.srcCode = code
+    val javaSourceFile = JavaSourceFile(javaClassName, lang, code)
     return javaSourceFile
 }
 
@@ -155,13 +187,8 @@ fun ofMybatisMapper(
     poSourceFile: JavaSourceFile,
     lang: Lang
 ): JavaSourceFile {
-    val javaSourceFile = JavaSourceFile()
-    val codeBuilder = StringBuilder()
     val poClassName = poSourceFile.javaClassName
     val mapperClassName = fromLowerUnderScore(javaPackage, table.name, "Mapper")
-    javaSourceFile.srcFileName = mapperClassName.toSrcFileName(lang)
-    javaSourceFile.javaClassName = mapperClassName
-    javaSourceFile.packageName = javaPackage.dotSplitName
     var code: String = if (lang == Lang.KOTLIN) {
         val javaCode = kotlinWriter()
             .packagel(javaPackage.dotSplitName)
@@ -183,7 +210,7 @@ fun ofMybatisMapper(
             .blockl()
         javaCode.toString()
     }
-    javaSourceFile.srcCode = code
+    val javaSourceFile = JavaSourceFile(mapperClassName, lang, code)
     return javaSourceFile
 }
 
@@ -193,16 +220,12 @@ fun ofServiceImpl(
     serviceSourceFile: JavaSourceFile,
     lang: Lang
 ): JavaSourceFile {
-    val javaSourceFile = JavaSourceFile()
     val serviceClassName = serviceSourceFile.javaClassName
     val serviceImplClassName = fromLowerUnderScore(
         javaPackage,
         table.name,
         "ServiceImpl"
     )
-    javaSourceFile.srcFileName = serviceImplClassName.toSrcFileName(lang)
-    javaSourceFile.javaClassName = serviceImplClassName
-    javaSourceFile.packageName = javaPackage.dotSplitName
     var code: String = if (lang == Lang.KOTLIN) {
         val javaCode = kotlinWriter()
             .packagel(javaPackage.dotSplitName)
@@ -224,7 +247,7 @@ fun ofServiceImpl(
             .blockl()
         javaCode.toString()
     }
-    javaSourceFile.srcCode = code
+    val javaSourceFile = JavaSourceFile(serviceImplClassName, lang, code)
     return javaSourceFile
 }
 
@@ -234,11 +257,7 @@ fun ofDao(
     poJavaSourceFile: JavaSourceFile,
     lang: Lang
 ): JavaSourceFile {
-    val javaSourceFile = JavaSourceFile()
     val daoClassName = fromLowerUnderScore(javaPackage, table.name, "Dao")
-    javaSourceFile.srcFileName = daoClassName.toSrcFileName(lang)
-    javaSourceFile.javaClassName = daoClassName
-    javaSourceFile.packageName = javaPackage.dotSplitName
     var code: String = if (lang == Lang.KOTLIN) {
         val javaCode = kotlinWriter()
             .packagel(javaPackage.dotSplitName)
@@ -258,7 +277,7 @@ fun ofDao(
             .blockl()
         javaCode.toString()
     }
-    javaSourceFile.srcCode = code
+    val javaSourceFile = JavaSourceFile(daoClassName, lang, code)
     return javaSourceFile
 }
 
@@ -270,11 +289,7 @@ fun ofDaoImpl(
     daoSourceFile: JavaSourceFile,
     lang: Lang
 ): JavaSourceFile {
-    val javaSourceFile = JavaSourceFile()
     val daoImplClassName = fromLowerUnderScore(javaPackage, table.name, "DaoImpl")
-    javaSourceFile.srcFileName = daoImplClassName.toSrcFileName(lang)
-    javaSourceFile.javaClassName = daoImplClassName
-    javaSourceFile.packageName = javaPackage.dotSplitName
     var code: String = if (lang == Lang.KOTLIN) {
         val javaCode = kotlinWriter()
             .packagel(javaPackage.dotSplitName)
@@ -306,16 +321,12 @@ fun ofDaoImpl(
             .blockl()
         javaCode.toString()
     }
-    javaSourceFile.srcCode = code
+    val javaSourceFile = JavaSourceFile(daoImplClassName, lang, code)
     return javaSourceFile
 }
 
 fun ofService(table: Table, javaPackage: JavaPackage, lang: Lang): JavaSourceFile {
-    val javaSourceFile = JavaSourceFile()
     val serviceClassName = fromLowerUnderScore(javaPackage, table.name, "Service")
-    javaSourceFile.srcFileName = serviceClassName.toSrcFileName(lang)
-    javaSourceFile.javaClassName = serviceClassName
-    javaSourceFile.packageName = javaPackage.dotSplitName
     var code: String = if (lang == Lang.KOTLIN) {
         val javaCode = kotlinWriter()
             .packagel(javaPackage.dotSplitName)
@@ -329,6 +340,6 @@ fun ofService(table: Table, javaPackage: JavaPackage, lang: Lang): JavaSourceFil
             .blockl()
         javaCode.toString()
     }
-    javaSourceFile.srcCode = code
+    val javaSourceFile = JavaSourceFile(serviceClassName, lang, code)
     return javaSourceFile
 }

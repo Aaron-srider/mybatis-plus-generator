@@ -2,20 +2,13 @@ package fit.wenchao.db
 
 import fit.wenchao.db.constants.Lang
 
-class JavaClassName {
-
-    lateinit var name: String;
-    lateinit var javaPackage: JavaPackage;
+class JavaClassName(var name: String, var javaPackage: JavaPackage) {
 
     companion object {
-        @JvmStatic
         fun fromLowerUnderScore(javaPackage: JavaPackage, name: String, prefix: String): JavaClassName {
-            val kotlinClassName = JavaClassName()
-            kotlinClassName.javaPackage = javaPackage
             val underScore = VarCaseConvertUtils.lowerUnderScore2LowerCamel(name)
             val capitalized = underScore.replaceFirstChar { it.uppercase() }
-            kotlinClassName.name = capitalized + prefix
-            return kotlinClassName
+            return JavaClassName(capitalized + prefix, javaPackage)
         }
     }
 

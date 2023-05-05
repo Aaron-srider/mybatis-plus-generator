@@ -16,4 +16,13 @@ class GeneratorContext {
         return contextMap[key]
     }
 
+    fun report() {
+        this.contextMap.forEach{ println(it)}
+    }
+
+    fun pour(newInfoRegistor: NewInfoRegistor) {
+        val newInfoMap = newInfoRegistor.getNewInfoMap()
+        this.contextMap.putAll(newInfoMap)
+    }
+
 }
