@@ -10,7 +10,7 @@ class DatabaseConnection {
 
  const val DRIVER = "com.mysql.jdbc.Driver"
  const val DATABASE_URL =
-    "jdbc:mysql://localhost:33061/simple-codebase?useUnicode=true&characterEncoding=UTF-8&useSSL=false"
+    "jdbc:mysql://localhost:33061/shardingsphere-encryption-playground?useUnicode=true&characterEncoding=UTF-8&useSSL=false"
  const val USERNAME = "root"
  const val PASSWORD = "wc123456"
 
@@ -20,7 +20,6 @@ fun closeConnection(conn: Connection) {
 }
 
 fun getConnection(): Connection {
-    Class.forName(DRIVER)
     var conn: Connection? = null
     conn = DriverManager.getConnection(
         DATABASE_URL,

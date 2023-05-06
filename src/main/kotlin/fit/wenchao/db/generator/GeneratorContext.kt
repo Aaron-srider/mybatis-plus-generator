@@ -1,4 +1,37 @@
 package fit.wenchao.db.generator
+enum class GlobalContextKey {
+    TABLES,
+
+    MODEL_PACKAGE,
+    REPO_PACKAGE,
+    REPOIMPL_PACKAGE,
+    MAPPER_PACKAGE,
+    SERVICE_PACKAGE,
+    SERVICEIMPL_PACKAGE,
+
+
+    LANGUAGE,
+
+    PROJECT_TO_SRC_PATH,
+
+    BASE_DIR,
+
+
+
+    HOST,
+    PORT,
+    DBNAME,
+    USERNAME,
+    PASSWORD,
+    URL,
+
+
+    ModelSource,
+    MapperSource,
+    RepoSource,
+    ServiceSource,
+    ServiceImplSource,
+}
 
 class GeneratorContext {
 

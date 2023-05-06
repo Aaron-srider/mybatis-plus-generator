@@ -2,51 +2,23 @@ package fit.wenchao.db.generator
 
 import fit.wenchao.db.JavaPackage
 import fit.wenchao.db.Table
-import fit.wenchao.db.dbConnection.getConnection
 import fit.wenchao.db.fromTable
 import fit.wenchao.db.generator.units.*
-import java.sql.Connection
-import java.sql.DatabaseMetaData
-import java.sql.ResultSet
+import java.sql.*
 import java.util.*
-
-enum class GlobalContextKey {
-    TABLES,
-
-    MODEL_PACKAGE,
-    REPO_PACKAGE,
-    REPOIMPL_PACKAGE,
-    MAPPER_PACKAGE,
-    SERVICE_PACKAGE,
-    SERVICEIMPL_PACKAGE,
-
-
-    LANGUAGE,
-
-    PROJECT_TO_SRC_PATH,
-
-    BASE_DIR,
-
-
-    ModelSource,
-    MapperSource,
-    RepoSource,
-    ServiceSource,
-    ServiceImplSource,
-}
 
 
 fun getTables(): MutableList<Table> {
     val tables = ArrayList<Table>()
-    val conn: Connection = getConnection()
+    val conn: Connection = DbManager.getConnection()
     var rs: ResultSet? = null
     try {
         // 获取数据库的元数据
         val db: DatabaseMetaData = conn.metaData
         // 从元数据中获取到所有的表名
-        rs = db.getTables(null, "simple-codebase", null, arrayOf("TABLE"))
+        rs = db.getTables(null, DbManager.dbname, null, arrayOf("TABLE"))
         while (rs.next()) {
-            if (!"simple-codebase".equals(rs.getString(1))) {
+            if (! DbManager.dbname.equals(rs.getString(1))) {
                 continue
             }
             val table = Table()
@@ -64,6 +36,53 @@ fun getTables(): MutableList<Table> {
 }
 
 
+object DbManager {
+    var host: String
+    var port: String
+    var dbname: String
+    var username: String
+    var password: String
+    var url: String
+
+    init {
+        val props = Properties()
+        val inputStream = JavaPackage::class.java.classLoader.getResourceAsStream("config.properties")
+        inputStream?.let {
+            props.load(inputStream)
+        } ?: run {
+            throw RuntimeException("config.properties not found")
+        }
+
+        // fetch connection props from config.properties and set default value
+        var host: String = props.getProperty("host") ?: "127.0.0.1"
+        var port: String = props.getProperty("port") ?: "3306"
+        var dbname: String = props.getProperty("dbname") ?: "testdb"
+        var username: String = props.getProperty("username") ?: "root"
+        var password: String = props.getProperty("password") ?: "123456"
+
+        this.host=host
+        this.port=port
+        this.dbname=dbname
+        this.username=username
+        this.password=password
+
+        url = "jdbc:mysql://${host}:${port}/${dbname}?useUnicode=true&characterEncoding=UTF-8&useSSL=false"
+    }
+
+    fun getConnection(): Connection {
+        var conn: Connection? = null
+        conn = DriverManager.getConnection(
+            url,
+            username,
+            password
+        )
+        conn ?: throw SQLException("get connection failure")
+        return conn
+    }
+
+}
+
+
 class Generator {
 
     fun start() {
@@ -73,6 +92,7 @@ class Generator {
 
         // read properties from config
         prepareProperties(globalContext)
+
 
         initContext(globalContext)
 
@@ -160,9 +180,8 @@ class Generator {
     }
 
     private fun initContext(globalContext: GeneratorContext) {
-
         // prepare all tables to process
-        val tables = getTables()
+        val tables = getTables( )
         globalContext.put(GlobalContextKey.TABLES.name, tables)
     }
 
