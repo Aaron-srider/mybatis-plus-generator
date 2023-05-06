@@ -4,5 +4,5 @@ class MainDriven
 
 fun main() {
     var generator = Generator()
-    generator.start()
+    generator.start(MainDriven::class.java)
 }

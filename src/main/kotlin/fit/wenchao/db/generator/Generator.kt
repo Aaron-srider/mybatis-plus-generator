@@ -7,7 +7,6 @@ import fit.wenchao.db.generator.units.*
 import java.sql.*
 import java.util.*
 
-
 fun getTables(): MutableList<Table> {
     val tables = ArrayList<Table>()
     val conn: Connection = DbManager.getConnection()
@@ -34,7 +33,6 @@ fun getTables(): MutableList<Table> {
     }
     return tables
 }
-
 
 object DbManager {
     var host: String
@@ -82,17 +80,24 @@ object DbManager {
 
 }
 
+fun getCurrentPackage(clazz: Class<*>): String {
+    return clazz.getPackage().name
+}
+
+fun getCurrentPackagePath(clazz: Class<*> ): String {
+    val name = clazz.getPackage().name
+    return name.replace(".", "/")
+}
 
 class Generator {
 
-    fun start() {
+    fun start(contextClazz: Class<*>) {
 
         // global context for generation
         var globalContext = GeneratorContext()
 
         // read properties from config
-        prepareProperties(globalContext)
-
+        prepareProperties(contextClazz, globalContext)
 
         initContext(globalContext)
 
@@ -110,7 +115,7 @@ class Generator {
     private fun orchestrateUnits(generatorUnits: MutableList<GeneratorUnit>) {
     }
 
-    private fun prepareProperties(globalContext: GeneratorContext) {
+    private fun prepareProperties(contextClazz: Class<*>, globalContext: GeneratorContext) {
         // read projectToSrc from config.properties
         val props = Properties()
         val inputStream = JavaPackage::class.java.classLoader.getResourceAsStream("config.properties")
@@ -131,9 +136,8 @@ class Generator {
         baseDir?.let {
             globalContext.put(GlobalContextKey.BASE_DIR.name, baseDir)
         } ?: run {
-            throw RuntimeException("baseDir not found in config.properties")
+            globalContext.put(GlobalContextKey.BASE_DIR.name, getCurrentPackagePath(contextClazz))
         }
-
 
         val modelPackage: String? = props.getProperty("modelPackage")
         modelPackage?.let {
@@ -190,7 +194,6 @@ class Generator {
             unit.generate()
         }
     }
-
 
     private fun getAllGeneratorUnits(globalContext: GeneratorContext): MutableList<GeneratorUnit> {
         return mutableListOf(
