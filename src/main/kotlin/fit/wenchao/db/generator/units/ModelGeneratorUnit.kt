@@ -18,13 +18,13 @@ class ModelGeneratorUnit(generatorContext: GeneratorContext) : GenericGeneratorU
 
     override fun doGenerate(partialMap: HashMap<String, Any>, newInfoRegistor: NewInfoRegistor) {
 
-        // all tables to process
-        var tables: MutableList<Table> = getTables()
-
         var modelPackage = getPackage(GlobalContextKey.MODEL_PACKAGE)
 
         // what language to generate
         var language = getLanguage()
+
+        // all tables to process
+        var tables: MutableList<Table> = getTables()
 
         tables.forEach { table ->
             val modelClazzName = JavaClassName.fromLowerUnderScore(modelPackage, table.name, "PO")

@@ -7,7 +7,10 @@ import fit.wenchao.db.generator.units.*
 import java.sql.*
 import java.util.*
 
-fun getTables(): MutableList<Table> {
+fun getTables(tableList: MutableList<String>): MutableList<Table> {
+    if (tableList.isEmpty()) {
+        return mutableListOf()
+    }
     val tables = ArrayList<Table>()
     val conn: Connection = DbManager.getConnection()
     var rs: ResultSet? = null
@@ -17,11 +20,14 @@ fun getTables(): MutableList<Table> {
         // 从元数据中获取到所有的表名
         rs = db.getTables(null, DbManager.dbname, null, arrayOf("TABLE"))
         while (rs.next()) {
-            if (! DbManager.dbname.equals(rs.getString(1))) {
+            if (!DbManager.dbname.equals(rs.getString(1))) {
                 continue
             }
             val table = Table()
             val tableName = rs.getString(3)
+            if (!tableList.contains(tableName)) {
+                continue
+            }
             table.name = tableName
             val attrs = fromTable(conn, table)
             table.attrs = (attrs)
@@ -58,11 +64,11 @@ object DbManager {
         var username: String = props.getProperty("username") ?: "root"
         var password: String = props.getProperty("password") ?: "123456"
 
-        this.host=host
-        this.port=port
-        this.dbname=dbname
-        this.username=username
-        this.password=password
+        this.host = host
+        this.port = port
+        this.dbname = dbname
+        this.username = username
+        this.password = password
 
         url = "jdbc:mysql://${host}:${port}/${dbname}?useUnicode=true&characterEncoding=UTF-8&useSSL=false"
     }
@@ -84,7 +90,7 @@ fun getCurrentPackage(clazz: Class<*>): String {
     return clazz.getPackage().name
 }
 
-fun getCurrentPackagePath(clazz: Class<*> ): String {
+fun getCurrentPackagePath(clazz: Class<*>): String {
     val name = clazz.getPackage().name
     return name.replace(".", "/")
 }
@@ -181,11 +187,23 @@ class Generator {
             throw RuntimeException("serviceImplPackage not found in config.properties")
         }
 
+
+        val wantedTables: String? = props.getProperty("wantedTables")
+        wantedTables?.let {
+            var wantedTableList = it.split(",")
+            globalContext.put(GlobalContextKey.WANTED_TABLES.name, wantedTableList)
+        } ?: run {
+            globalContext.put(GlobalContextKey.WANTED_TABLES.name, mutableListOf<String>())
+        }
+
     }
 
     private fun initContext(globalContext: GeneratorContext) {
+        var wantedTables: MutableList<String> =
+            globalContext.get(GlobalContextKey.WANTED_TABLES.name) as MutableList<String>
+
         // prepare all tables to process
-        val tables = getTables( )
+        val tables = getTables(wantedTables)
         globalContext.put(GlobalContextKey.TABLES.name, tables)
     }
 

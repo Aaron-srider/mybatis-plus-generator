@@ -15,7 +15,7 @@ class TableAttr {
         var pStemt: PreparedStatement? = null
         var rs: ResultSet? = null
         try {
-            pStemt = conn.prepareStatement("show full columns from $tableName")
+            pStemt = conn.prepareStatement("show full columns from `$tableName`")
             rs = pStemt.executeQuery()
             while (rs.next()) {
                 val fieldName = rs.getString("Field")
@@ -34,7 +34,7 @@ class TableAttr {
         var pStemt: PreparedStatement? = null
         var rs: ResultSet? = null
         try {
-            pStemt = conn.prepareStatement("show full columns from $tableName")
+            pStemt = conn.prepareStatement("show full columns from `$tableName`")
             rs = pStemt.executeQuery()
             while (rs.next()) {
                 val fieldName = rs.getString("Field")
@@ -55,7 +55,7 @@ class TableAttr {
         var pStemt: PreparedStatement? = null
         var rs: ResultSet? = null
         try {
-            pStemt = conn.prepareStatement("show full columns from $tableName")
+            pStemt = conn.prepareStatement("show full columns from `$tableName`")
             rs = pStemt.executeQuery()
             while (rs.next()) {
                 val fieldName = rs.getString("Field")
@@ -81,7 +81,7 @@ fun fromTable(conn: Connection, table: Table): List<TableAttr> {
     val tableAttrs = ArrayList<TableAttr>()
 
     var ps: PreparedStatement? = null
-    val tableSql = SQL + table.name
+    val tableSql = SQL + table.getQuotedName()
     try {
         ps = conn.prepareStatement(tableSql)
         val rsmd = ps.metaData

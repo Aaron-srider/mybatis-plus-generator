@@ -2,12 +2,10 @@ package fit.wenchao.db;
 
 import fit.wenchao.db.JavaPackage.Companion.from
 import fit.wenchao.db.dbConnection.getConnection
-import fit.wenchao.db.generator.GeneratorContext
 import java.sql.Connection
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
 import java.util.*
-import kotlin.collections.ArrayList
 
 
 
@@ -41,7 +39,7 @@ object Generator {
             // 获取数据库的元数据
             val db: DatabaseMetaData = conn.metaData
             // 从元数据中获取到所有的表名
-            rs = db.getTables(null, "simple-codebase", null, arrayOf("TABLE"))
+            rs = db.getTables(null, null, null, arrayOf("TABLE"))
             while (rs.next()) {
                 if (!"simple-codebase".equals(rs.getString(1))) {
                     continue

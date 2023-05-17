@@ -8,6 +8,7 @@ enum class GlobalContextKey {
     MAPPER_PACKAGE,
     SERVICE_PACKAGE,
     SERVICEIMPL_PACKAGE,
+    WANTED_TABLES,
 
 
     LANGUAGE,
@@ -30,7 +31,9 @@ enum class GlobalContextKey {
     MapperSource,
     RepoSource,
     ServiceSource,
-    ServiceImplSource,
+    ServiceImplSource,;
+
+
 }
 
 class GeneratorContext {

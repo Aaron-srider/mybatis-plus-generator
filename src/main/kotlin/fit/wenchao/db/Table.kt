@@ -1,12 +1,31 @@
 package fit.wenchao.db
 
 import fit.wenchao.db.constants.Lang
+import kotlin.reflect.KProperty
+
+class QuotedStringDelegate {
+    private var value: String = ""
+
+    operator fun getValue(thisRef: Any?, property: KProperty<*>): String {
+        return value
+    }
+
+    operator fun setValue(thisRef: Any?, property: KProperty<*>, newValue: String) {
+        value = "`$newValue`"
+    }
+}
 
 class Table : Iterable<TableAttr> {
 
-    var name: String = ""
+    var name: String  = ""
 
     var attrs: List<TableAttr> = mutableListOf()
+
+
+    fun getQuotedName():String {
+        return "`${name}`"
+    }
+
 
     override fun iterator(): Iterator<TableAttr> {
         return attrs.iterator()
